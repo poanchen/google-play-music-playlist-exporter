@@ -10,5 +10,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     chrome.tabs.create({"url": chrome.extension.getURL('result.html')});
     localStorage.info = request.info;
     localStorage.songs = request.contents;
+    localStorage.playlistTitle = request.playlistTitle;
   }
 });

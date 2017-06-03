@@ -7,7 +7,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     var seen = Immutable.Set();
     var topId = "";
     var playlistTitle = document.querySelector("[slot='title']").innerHTML;
-    console.log('Beginning to export ' + playlistTitle + 'playlist in Google Play Music.');
+    console.log('Beginning to export ' + playlistTitle + ' playlist in Google Play Music.');
     document.querySelector("#mainContainer").scrollTop = 0; // scroll to top to begin with
     var interval = setInterval(function() {
       var songsFromPlaylistInHtml = document.querySelectorAll("table.song-table tbody tr.song-row");
@@ -19,11 +19,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
           var isAtBottom = scrollDiv.scrollTop == (scrollDiv.scrollHeight - scrollDiv.offsetHeight)
           if (isAtBottom || retries <= 0) {
             clearInterval(interval);
-            var info = 'Finished reading ' + songs.size + ' songs from ' + playlistTitle + 'playlist in Google Play Music.';
+            var info = 'Finished reading ' + songs.size + ' songs from ' + playlistTitle + ' playlist in Google Play Music.';
             var songsInJSON = JSON.stringify(songs.toJS(), undefined, 2);
             chrome.runtime.sendMessage({
-              "message" : "open_new_tab",
-              "info" : info,
+              "message": "open_new_tab",
+              "info": info,
+              "playlistTitle": playlistTitle,
               "contents": songsInJSON
             });
           }
@@ -35,7 +36,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             if (!seen.has(id)) {
               songs = songs.set(id, Immutable.Map({
                 title: songsFromPlaylistInHtml[i].childNodes[1].textContent.trim(),
-                duration: songsFromPlaylistInHtml[i].childNodes[2].textContent.trim(),
                 artist: songsFromPlaylistInHtml[i].childNodes[3].textContent.trim(),
                 album: songsFromPlaylistInHtml[i].childNodes[4].textContent.trim()
               }));
