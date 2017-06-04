@@ -2,6 +2,9 @@
 
 A Google Chrome Extension that will help user to export their playlist and allowing potential import into other music service (such as Spotify) with a click of a button.
 
+## Demo
+![Loading the first image](demo.gif)
+
 ## Why is this useful?
 
 It can be tough/uneasy to manually move all your favorite music in your playlist from one service to another one. To make user's life a lot easier. This Google Chrome Extension will help user to export their music playlist with a click of a button.
