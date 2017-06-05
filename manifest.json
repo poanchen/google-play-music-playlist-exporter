@@ -4,8 +4,7 @@
   "version": "0.0.1",
   "background": {
     "scripts": [
-      "background.js",
-      "result.js"
+      "background.js"
     ]
   },
   "content_scripts": [

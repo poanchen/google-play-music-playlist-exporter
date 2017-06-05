@@ -1,23 +1,21 @@
 document.getElementById("info").innerHTML = localStorage.info;
 var progress = document.getElementById("progress");
-document.getElementById("grant-button-clicked").onclick = function() {
-  progress.innerHTML += "[INFO] Grant button has been clicked...<br>";
-  setTimeout(function() {
-    chrome.tabs.query({url: "https://www.jenrenalcare.com/**"}, function(tabs) {
-      tabs.forEach(function(tab) {
-        retrieveAccessToken(tab.url)
-          .then(retrieveUserInfo)
-          .then(createAPlaylist)
-          .then(getAllSongsInfo)
-          .then(prepareToaddAllSongsToPlaylist)
-          .then(addAllSongsToPlaylist)
-          .catch(error => {
-            progress.innerHTML += "[WARNING] " + error + "<br>";
-          });
+var redirectUri = "https://www.jenrenalcare.com/upload/thank-you.html";
+
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+  if (tab.url.indexOf(redirectUri) != -1 && changeInfo.status == 'complete') {
+    progress.innerHTML += "[INFO] Grant button has been clicked...<br>";
+    retrieveAccessToken(tab.url)
+      .then(retrieveUserInfo)
+      .then(createAPlaylist)
+      .then(getAllSongsInfo)
+      .then(prepareToaddAllSongsToPlaylist)
+      .then(addAllSongsToPlaylist)
+      .catch(error => {
+        progress.innerHTML += "[WARNING] " + error + "<br>";
       });
-    });
-  }, 2000);
-};
+  }
+});
 
 const addAllSongsToPlaylist = response => {
   progress.innerHTML += "[INFO] Let's begin to add all your songs to the playlist...<br>";
@@ -134,7 +132,7 @@ const retrieveAccessToken = url => {
     post("https://accounts.spotify.com/api/token", {}, urlencode({
       grant_type: 'authorization_code',
       code: getParam(url, 'code'),
-      redirect_uri: "https://www.jenrenalcare.com/upload/thank-you.html",
+      redirect_uri: redirectUri,
       client_id: "3aa81ba3bbea466ba09fef04a5feea41",
       client_secret: "c47f40315044462d8b52bf747e8b2e1f"
     }), response => {
