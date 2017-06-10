@@ -16,7 +16,7 @@ git clone https://github.com/poanchen/google-play-music-playlist-exporter.git
 cd google-play-music-playlist-exporter
 ```
 
-Next, you must download the immutableJS library from https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.1/immutable.min.js and rename it to immutable-3.8.1.min.js and save it to the directory.
+Next, you must download the immutableJS library from https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.1/immutable.min.js and save it into the directory.
 
 ## Disclaimer
 Some of the code was derived and inspired from [export_google_music.js](https://gist.github.com/jmiserez/c9a9a0f41e867e5ebb75) by [jmiserez](https://github.com/jmiserez).
