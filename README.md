@@ -16,7 +16,14 @@ git clone https://github.com/poanchen/google-play-music-playlist-exporter.git
 cd google-play-music-playlist-exporter
 ```
 
-Next, you must download the immutableJS library from https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.1/immutable.min.js and save it into the directory.
+Next, if you are on Mac OSX or Linux. Run the downloadImmutableJS bash script, (to download the ImmutableJS script)
+```
+./downloadImmutableJS.sh
+```
+
+Otherwise, you must download the immutableJS library from https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.1/immutable.min.js and save it into the directory.
+
+Then, you must manually add the Chrome Extension in your Chrome.
 
 ## Disclaimer
 Some of the code was derived and inspired from [export_google_music.js](https://gist.github.com/jmiserez/c9a9a0f41e867e5ebb75) by [jmiserez](https://github.com/jmiserez).
