@@ -41,7 +41,12 @@ const prepareToaddAllSongsToPlaylist = response => {
   var songs = [];
   for (key in response) {
     if (isNumeric(key)) {
-      songs.push(response[key].uri);
+      try {
+        songs.push(response[key].uri);
+      } catch(err) {
+        // probably would be a good idea to warn the user
+        console.log(err);
+      } 
     }
   }
   return new Promise(resolve => {
@@ -62,11 +67,16 @@ const getAllSongsInfo = response => {
   var songs = JSON.parse(localStorage.songs);
   var allSearchPromises = [];
   for (key in songs) {
+    // https://developer.spotify.com/web-api/user-guide/#rate-limiting
+    // https://github.com/spotify/web-api/issues/116
+    // might to to add a delay for searching a song so that we will not get status code 429
+    // however, it might be better idea to use Retry-After header?
+    // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Retry-After
     response['song'] = songs[key];
     progress.innerHTML += "[INFO] Preparing to add " + songs[key].title + " by " + songs[key].artist + " to the playlist...<br>";
     allSearchPromises.push(searchASong(response));
   }
-  return Promise.all(allSearchPromises).then(function(response) {
+  return Promise.all(allSearchPromises).then(response => {
     response['token_type'] = tokenType;
     response['access_token'] = accessToken;
     response['playlistId'] = playlistId;
@@ -142,7 +152,8 @@ const retrieveAccessToken = url => {
   })
 };
 
-function buildSearchQuery(song) {
+const buildSearchQuery = song => {
+  // might need to encode as character like # is getting weird behaviour
   return "q=" + song.title +
          "%20album:" + song.album +
          "%20artist:" + song.artist +
@@ -150,7 +161,7 @@ function buildSearchQuery(song) {
 }
 
 // https://stackoverflow.com/a/9718723 by DonCallisto (https://stackoverflow.com/users/814253/doncallisto)
-function getParam(url, field) {
+const getParam = (url, field) => {
   field = field.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
   var regexS = "[\\?&]"+field+"=([^&#]*)";
   var regex = new RegExp(regexS);
@@ -162,7 +173,7 @@ function getParam(url, field) {
   }
 }
 
-function urlencode(data) {
+const urlencode = data => {
   var url = '';
   for (key in data) {
     url += key + '=' + data[key] + '&';
@@ -170,14 +181,14 @@ function urlencode(data) {
   return url.substring(0, url.length-1);
 }
 
-function assignRequestHeader(request, header) {
+const assignRequestHeader = (request, header) => {
   for (key in header) {
     request.setRequestHeader(key, header[key]);
   }
   return request;
 }
 
-function get(url, header, param, success) {
+const get = (url, header, param, success) => {
   var request = new XMLHttpRequest();
   request.open('GET', url + '?' + param);
   request = assignRequestHeader(request, header);
@@ -191,7 +202,7 @@ function get(url, header, param, success) {
   request.send();
 }
 
-function post(url, header, param, success) {
+const post = (url, header, param, success) => {
   var request = new XMLHttpRequest();
   request.open('POST', url, true);
   request = assignRequestHeader(request, header);
