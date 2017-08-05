@@ -11,5 +11,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     localStorage.info = request.info;
     localStorage.songs = request.contents;
     localStorage.playlistTitle = request.playlistTitle;
+    localStorage.numberOfSongs = request.numberOfSongs;
   }
 });

@@ -6,8 +6,23 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     var songs = Immutable.OrderedMap();
     var seen = Immutable.Set();
     var topId = "";
-    var playlistTitle = document.querySelector("[slot='title']").innerHTML;
+    var playlistTitle = document.querySelector("[slot='title']").innerHTML.trim();
+    // use with caution as Google Play Music might change their front-end
+    // which leads this to not working
+    var numberOfSongsInText = document.querySelector(
+      "div.style-scope.gpm-detail-page-header span[slot='metadata']"
+    ).childNodes[0].innerHTML;
+    var numberOfSongs = 0;
+    if (/\d+\ssong[s]?/.test(numberOfSongsInText)) {
+      var numbers = numberOfSongsInText.match(/\d+/);
+      if (numbers.length == 1) {
+        numberOfSongs = numbers[0];
+      }
+    }
     console.log('Beginning to export ' + playlistTitle + ' playlist in Google Play Music.');
+    if (numberOfSongs) {
+      console.log('There are in total of ' + numberOfSongs + ' song(s) according to Google Play Music.');
+    }
     document.querySelector("#mainContainer").scrollTop = 0; // scroll to top to begin with
     var interval = setInterval(function() {
       var songsFromPlaylistInHtml = document.querySelectorAll("table.song-table tbody tr.song-row");
@@ -20,12 +35,17 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
           if (isAtBottom || retries <= 0) {
             clearInterval(interval);
             var info = 'Finished reading ' + songs.size + ' songs from ' + playlistTitle + ' playlist in Google Play Music.';
+            if (parseInt(numberOfSongs) != parseInt(songs.size)) {
+              var lostSongs = parseInt(numberOfSongs) - parseInt(songs.size);
+              info += ' (with ' + lostSongs + ' lost).';
+            }
             var songsInJSON = JSON.stringify(songs.toJS(), undefined, 2);
             chrome.runtime.sendMessage({
               "message": "open_new_tab",
               "info": info,
               "playlistTitle": playlistTitle,
-              "contents": songsInJSON
+              "contents": songsInJSON,
+              "numberOfSongs": numberOfSongs
             });
           }
         } else {
