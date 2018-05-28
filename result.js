@@ -24,17 +24,24 @@ const addAllSongsToPlaylist = response => {
   var playlistId = response.playlistId;
   var userId = response.userId;
   var songs = response.songs;
-  return new Promise(resolve => {
-    post("https://api.spotify.com/v1/users/" + userId + "/playlists/" + playlistId + "/tracks", {
-      Authorization: tokenType + ' ' + accessToken,
-      "Content-type": "application/json"
-    }, JSON.stringify({
-      uris: songs
-    }), function(response) {
-      progress.innerHTML += "[INFO] All songs has been added to the playlist...<br>";
-      resolve(response);
-    });
-  });
+  var songRequests = [];
+  // The spotify api only allows 100 songs to be sent across at a time
+  // We need to batch our requests.
+  while (songs.length > 0) {
+    var reqSongs = (songs.length > 100) ? songs.splice(0,100) : songs.splice(0, songs.length);
+    songRequests.push(new Promise(resolve => {
+      post("https://api.spotify.com/v1/users/" + userId + "/playlists/" + playlistId + "/tracks", {
+        Authorization: tokenType + ' ' + accessToken,
+        "Content-type": "application/json"
+      }, JSON.stringify({
+        uris: reqSongs
+      }), function(response) {
+        progress.innerHTML += "[INFO] " + reqSongs.length + " Songs have been added to the playlist...<br>";
+        resolve(response);
+      });
+    }));
+  }
+  return Promise.all(songRequests);
 };
 
 const prepareToaddAllSongsToPlaylist = response => {
@@ -42,7 +49,10 @@ const prepareToaddAllSongsToPlaylist = response => {
   for (key in response) {
     if (isNumeric(key)) {
       try {
-        songs.push(response[key].uri);
+        // account for odd cases
+        if (response[key] && response[key].uri) {
+          songs.push(response[key].uri);
+        }     
       } catch(err) {
         // probably would be a good idea to warn the user
         console.log(err);
@@ -76,7 +86,15 @@ const getAllSongsInfo = response => {
     progress.innerHTML += "[INFO] Preparing to add " + songs[key].title + " by " + songs[key].artist + " to the playlist...<br>";
     allSearchPromises.push(searchASong(response));
   }
-  return Promise.all(allSearchPromises).then(response => {
+  // Execute promises sequentially, so we can delay them and
+  // avoid rate limit errors from spotify API
+  return allSearchPromises.reduce((promiseChain, currentTask) => {
+    return promiseChain.then(chainResults =>
+        currentTask.then(currentResult =>
+            [ ...chainResults, currentResult ]
+        )
+    );
+  }, Promise.resolve([])).then(response => {
     response['token_type'] = tokenType;
     response['access_token'] = accessToken;
     response['playlistId'] = playlistId;
@@ -87,11 +105,18 @@ const getAllSongsInfo = response => {
 
 const searchASong = response => {
   return new Promise(resolve => {
-    get("https://api.spotify.com/v1/search", {
-      Authorization: response.token_type + ' ' + response.access_token
-    }, buildSearchQuery(response.song), responseFromSearch => {
-      resolve(responseFromSearch.tracks.items[0]);
-    });
+      var waittime = 100; // milliseconds between calls
+      var ms = Math.floor((new Date).getTime()) + waittime;
+      while (Math.floor((new Date).getTime()) < ms) {
+        // This is a blocking wait.
+        // I tried a ton of ways to avoid this. Sadly window.timeout 
+        // has odd behvaiour within a chrome extension.
+      }
+      get("https://api.spotify.com/v1/search", {
+        Authorization: response.token_type + ' ' + response.access_token
+      }, buildSearchQuery(response.song), responseFromSearch => {
+        resolve(responseFromSearch.tracks.items[0]);
+      });
   });
 };
 

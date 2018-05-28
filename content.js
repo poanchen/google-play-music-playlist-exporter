@@ -58,9 +58,9 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                 // Instead of hard-coded in the index for the title, artist, and album.
                 // we should actually check first and then use it.
                 // More info: please visit https://github.com/poanchen/google-play-music-playlist-exporter/issues/1#issuecomment-316921298
-                title: songsFromPlaylistInHtml[i].childNodes[1].textContent.trim(),
-                artist: songsFromPlaylistInHtml[i].childNodes[3].textContent.trim(),
-                album: songsFromPlaylistInHtml[i].childNodes[4].textContent.trim()
+                title: songsFromPlaylistInHtml[i].childNodes[0].textContent.trim(),
+                artist: songsFromPlaylistInHtml[i].childNodes[2].textContent.trim(),
+                album: songsFromPlaylistInHtml[i].childNodes[3].textContent.trim()
               }));
               seen = seen.add(id);
             }
