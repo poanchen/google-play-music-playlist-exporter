@@ -23,6 +23,7 @@
   },
   "permissions": [
     "tabs",
-    "https://accounts.spotify.com/*"
+    "https://accounts.spotify.com/*",
+    "https://api.spotify.com/*"
   ]
 }
