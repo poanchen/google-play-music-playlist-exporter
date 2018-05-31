@@ -105,18 +105,22 @@ const getAllSongsInfo = response => {
 
 const searchASong = response => {
   return new Promise(resolve => {
-      var waittime = 100; // milliseconds between calls
-      var ms = Math.floor((new Date).getTime()) + waittime;
-      while (Math.floor((new Date).getTime()) < ms) {
-        // This is a blocking wait.
-        // I tried a ton of ways to avoid this. Sadly window.timeout 
-        // has odd behvaiour within a chrome extension.
+    var waittime = 100; // milliseconds between calls
+    var ms = Math.floor((new Date).getTime()) + waittime;
+    while (Math.floor((new Date).getTime()) < ms) {
+      // This is a blocking wait.
+      // I tried a ton of ways to avoid this. Sadly window.timeout 
+      // has odd behvaiour within a chrome extension.
+    }
+    get("https://api.spotify.com/v1/search", {
+      Authorization: response.token_type + ' ' + response.access_token
+    }, buildSearchQuery(response.song), responseFromSearch => {
+      if(responseFromSearch.tracks.items.length == 0) {
+        let songInfo = getSongInfo(responseFromSearch.tracks.href);
+        progress.innerHTML += "<span style='color: red'>[WARNING] Could not find the song " + songInfo.title + " by " + songInfo.artist + " on Spotify...</span><br>";
       }
-      get("https://api.spotify.com/v1/search", {
-        Authorization: response.token_type + ' ' + response.access_token
-      }, buildSearchQuery(response.song), responseFromSearch => {
-        resolve(responseFromSearch.tracks.items[0]);
-      });
+      resolve(responseFromSearch.tracks.items[0]);
+    });
   });
 };
 
@@ -156,7 +160,7 @@ const retrieveUserInfo = response => {
       progress.innerHTML += "[INFO] Your user id is " + response.id + "...<br>";
       response['token_type'] = tokenType
       response['access_token'] = accessToken;
-      return resolve(response);
+      resolve(response);
     });
   });
 };
@@ -183,6 +187,17 @@ const buildSearchQuery = song => {
          "%20album:" + song.album +
          "%20artist:" + song.artist +
          "&type=track";
+}
+
+const getSongInfo = url => {
+  let decodeUrl = decodeURIComponent(url);
+  let query = decodeUrl.split("?")[1].split("&")[0];
+  let matchedResults = /^query=(\S+)\+album\:(\S+)\+artist\:([\S]+)/.exec(query);
+  return {
+    title: matchedResults[1].split("+").join(" "),
+    album: matchedResults[2].split("+").join(" "),
+    artist: matchedResults[3].split("+").join(" ")
+  }
 }
 
 // https://stackoverflow.com/a/9718723 by DonCallisto (https://stackoverflow.com/users/814253/doncallisto)
