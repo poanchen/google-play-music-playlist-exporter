@@ -181,7 +181,25 @@ const retrieveAccessToken = url => {
   })
 };
 
+const handleFeatNamingConvention = song => {
+  let matchedResults = /^([\S\s]+)\s(\([\S\s]+\))/.exec(song.title);
+  if(matchedResults == null) return song;
+  let featMatchedResults = /\(feat.\s([\S\s]+)\)/.exec(matchedResults[2]);
+  if(featMatchedResults == null) return song;
+  return {
+    title: matchedResults[1],
+    artist: song.artist + ", " + featMatchedResults[1],
+    album: song.album
+  };
+}
+
+const formatGooglePlayMusicNamingConventionToSpotify = song => {
+  song = handleFeatNamingConvention(song);
+  return song;
+}
+
 const buildSearchQuery = song => {
+  song = formatGooglePlayMusicNamingConventionToSpotify(song);
   // might need to encode as character like # is getting weird behaviour
   return "q=" + song.title +
          "%20album:" + song.album +
