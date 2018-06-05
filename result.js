@@ -115,7 +115,7 @@ const searchASong = response => {
     get("https://api.spotify.com/v1/search", {
       Authorization: response.token_type + ' ' + response.access_token
     }, buildSearchQuery(response.song), responseFromSearch => {
-      if(responseFromSearch.tracks.items.length == 0) {
+      if(responseFromSearch.tracks.total == 0) {
         let songInfo = getSongInfo(responseFromSearch.tracks.href);
         progress.innerHTML += "<span style='color: red'>[WARNING] Could not find the song " + songInfo.title + " by " + songInfo.artist + " on Spotify...</span><br>";
       }
@@ -188,7 +188,7 @@ const handleFeatNamingConvention = song => {
   if(featMatchedResults == null) return song;
   return {
     title: matchedResults[1],
-    artist: song.artist + ", " + featMatchedResults[1],
+    artist: song.artist + ", " + featMatchedResults[1].split("&").map(artist => artist.trim()).join(", "),
     album: song.album
   };
 }
@@ -201,9 +201,9 @@ const formatGooglePlayMusicNamingConventionToSpotify = song => {
 const buildSearchQuery = song => {
   song = formatGooglePlayMusicNamingConventionToSpotify(song);
   // might need to encode as character like # is getting weird behaviour
-  return "q=" + song.title +
-         "%20album:" + song.album +
-         "%20artist:" + song.artist +
+  return "q=" + encodeURIComponent(song.title) +
+         "%20album:" + encodeURIComponent(song.album) +
+         "%20artist:" + encodeURIComponent(song.artist) +
          "&type=track";
 }
 
