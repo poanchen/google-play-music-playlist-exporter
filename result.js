@@ -181,6 +181,32 @@ const retrieveAccessToken = url => {
   })
 };
 
+// "ArtistA & ArtistB => ArtistA, ArtistB"
+// useful when there are multiple (feat) artists for a song, for example,
+// Title (feat. ArtistA & ArtistB) - ArtistC - Album => Title - ArtistC, ArtistA, ArtistB - Album
+// Title - ArtistA & ArtistB - Album => Title - ArtistA, ArtistB - Album
+const splitAmpersandAndJoin = names => {
+  return names.split("&").map(artist => artist.trim()).join(", ");
+}
+
+// "ArtistA feat. ArtistB => ArtistA, ArtistB"
+// useful when there are duplicate (feat) artists for a song, for example,
+// Title (feat. ArtistA) - ArtistC feat. ArtistA - Album => Title - ArtistC, ArtistA, ArtistA - Album
+const splitFeatWordAndJoin = names => {
+  return names.split("feat.").map(artist => artist.trim()).join(", ");
+}
+
+// ArtistA, ArtistA, ArtistB, ArtistC, ArtistB
+// useful when there are duplicate artists in the list, for example,
+// Title - ArtistC, ArtistA, ArtistA - Album => Title - ArtistC, ArtistA - Album
+const removeDuplicateArtistsIfAny = names => {
+  let namesArr = names.split(",").map(artist => artist.trim()).reduce((allNames, artistName) => {
+    if(!(artistName in allNames)) allNames[artistName] = 1;
+    return allNames;
+  }, {});
+  return Object.keys(namesArr).join(", ");
+}
+
 const handleFeatNamingConvention = song => {
   let matchedResults = /^([\S\s]+)\s(\([\S\s]+\))/.exec(song.title);
   if(matchedResults == null) return song;
@@ -188,19 +214,20 @@ const handleFeatNamingConvention = song => {
   if(featMatchedResults == null) return song;
   return {
     title: matchedResults[1],
-    artist: song.artist + ", " + featMatchedResults[1].split("&").map(artist => artist.trim()).join(", "),
+    artist: removeDuplicateArtistsIfAny(song.artist + ", " + splitAmpersandAndJoin(featMatchedResults[1])),
     album: song.album
   };
 }
 
 const formatGooglePlayMusicNamingConventionToSpotify = song => {
+  song.artist = splitAmpersandAndJoin(song.artist);
+  song.artist = splitFeatWordAndJoin(song.artist);
   song = handleFeatNamingConvention(song);
   return song;
 }
 
 const buildSearchQuery = song => {
   song = formatGooglePlayMusicNamingConventionToSpotify(song);
-  // might need to encode as character like # is getting weird behaviour
   return "q=" + encodeURIComponent(song.title) +
          "%20album:" + encodeURIComponent(song.album) +
          "%20artist:" + encodeURIComponent(song.artist) +
