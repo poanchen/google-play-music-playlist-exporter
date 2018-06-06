@@ -219,7 +219,14 @@ const handleFeatNamingConvention = song => {
   };
 }
 
+const removeExplicitStr = title => {
+  let matchedResults = /^([\S\s]+)\s\(Explicit\)/.exec(title);
+  if(matchedResults == null) return title;
+  return matchedResults[1];
+}
+
 const formatGooglePlayMusicNamingConventionToSpotify = song => {
+  song.title = removeExplicitStr(song.title);
   song.artist = splitAmpersandAndJoin(song.artist);
   song.artist = splitFeatWordAndJoin(song.artist);
   song = handleFeatNamingConvention(song);
