@@ -25,10 +25,9 @@ const addAllSongsToPlaylist = response => {
   var userId = response.userId;
   var songs = response.songs;
   var songRequests = [];
-  // The spotify api only allows 100 songs to be sent across at a time
-  // We need to batch our requests.
+  progress.innerHTML += "[INFO] The spotify API only allows 100 songs to be sent across at a time, as a result, we need to batch our requests...<br>";
   while (songs.length > 0) {
-    var reqSongs = (songs.length > 100) ? songs.splice(0,100) : songs.splice(0, songs.length);
+    let reqSongs = (songs.length > 100) ? songs.splice(0,100) : songs.splice(0, songs.length);
     songRequests.push(new Promise(resolve => {
       post("https://api.spotify.com/v1/users/" + userId + "/playlists/" + playlistId + "/tracks", {
         Authorization: tokenType + ' ' + accessToken,
@@ -36,7 +35,7 @@ const addAllSongsToPlaylist = response => {
       }, JSON.stringify({
         uris: reqSongs
       }), function(response) {
-        progress.innerHTML += "[INFO] " + reqSongs.length + " Songs have been added to the playlist...<br>";
+        progress.innerHTML += "[INFO] " + reqSongs.length + " songs have been added to the playlist...<br>";
         resolve(response);
       });
     }));
@@ -149,7 +148,7 @@ const createAPlaylist = response => {
 
 const retrieveUserInfo = response => {
   progress.innerHTML += "[INFO] Let's check if your access token works...<br>";
-  progress.innerHTML += "[INFO] Trying to get the user id using the access token...<br>";
+  progress.innerHTML += "[INFO] Trying to get your user id using the access token...<br>";
   var tokenType = response.token_type;
   var accessToken = response.access_token;
   return new Promise(resolve => {
@@ -242,13 +241,12 @@ const buildSearchQuery = song => {
 }
 
 const getSongInfo = url => {
-  let decodeUrl = decodeURIComponent(url);
-  let query = decodeUrl.split("?")[1].split("&")[0];
+  let query = decodeURIComponent(url.split("?")[1].split("&")[0]);
   let matchedResults = /^query=(\S+)\+album\:(\S+)\+artist\:([\S]+)/.exec(query);
   return {
-    title: matchedResults[1].split("+").join(" "),
-    album: matchedResults[2].split("+").join(" "),
-    artist: matchedResults[3].split("+").join(" ")
+    title: matchedResults == null ? "?" : matchedResults[1].split("+").join(" "),
+    album: matchedResults == null ? "?" : matchedResults[2].split("+").join(" "),
+    artist: matchedResults == null ? "?" : matchedResults[3].split("+").join(" ")
   }
 }
 
